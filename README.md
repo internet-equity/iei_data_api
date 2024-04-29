@@ -6,8 +6,14 @@ A pythonic interface for interacting with the IEI data warehouse.
 
 Create an env and then install this package into your env.
 
+```bash
+pip install git+ssh://git@github.com:internet-equity/iei_data_api.git
+```
+
+Or you can clone the repo and install it directly (add the `-e` flag to install in dev mode, where changes to your source code is immediately available in your env).
+
 ```python
-pip install git+ssh://git@github.com:internet-equity/iei_data_api
+pip install -e path/to/your-iei_data_api-clone
 ```
 
 ## Usage
