@@ -9,12 +9,13 @@ from sqlalchemy.engine.url import URL
 
 
 class DataCatalog:
-    def __init__(self, env_file_path: Optional[Path] = None) -> None:
+    def __init__(self, env_file_path: Optional[Path] = None, host: str = "localhost") -> None:
         self.env_file_path = env_file_path
-        self.set_engine()
+        self.host = host
+        self.set_engine(host=self.host)
 
-    def set_engine(self, host: str = "localhost", port: str = "25432") -> Engine:
-        password = user = db_name =  None
+    def set_engine(self, host: str, port: str = "25432") -> Engine:
+        password = user = db_name = None
         if self.env_file_path:
             dwh_creds = self._read_env_to_dict(self.env_file_path)
             password = dwh_creds.get("POSTGRES_PASSWORD")
@@ -39,13 +40,13 @@ class DataCatalog:
                 if not line or line.startswith("#"):
                     continue
                 key, value = line.split("=", 1)
-                env_dict[key] = value.strip("\"")
+                env_dict[key] = value.strip('"')
         return env_dict
 
     def _get_pg_engine(
         self,
         username: str,
-        password:str,
+        password: str,
         host: str,
         port: str,
         database: str,
@@ -60,6 +61,17 @@ class DataCatalog:
                 database=database,
             )
         )
+
+    def _get_inspector(self):
+        return inspect(self.engine)
+
+    def get_schema_names(self) -> list[str]:
+        insp = self._get_inspector()
+        return insp.get_schema_names()
+
+    def get_table_names(self, schema: str) -> list[str]:
+        insp = self._get_inspector()
+        return insp.get_table_names(schema=schema)
 
     def command(self, sql: str) -> None:
         try:
