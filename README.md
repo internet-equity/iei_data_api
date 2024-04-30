@@ -7,7 +7,7 @@ A pythonic interface for interacting with the IEI data warehouse.
 Create an env and then install this package into your env.
 
 ```bash
-pip install git+ssh://git@github.com:internet-equity/iei_data_api.git
+python -m pip install git+ssh://git@github.com/internet-equity/iei_data_api.git
 ```
 
 Or you can clone the repo and install it directly (add the `-e` flag to install in dev mode, where changes to your source code is immediately available in your env).
@@ -29,6 +29,7 @@ POSTGRES_DB="iei_dwh"
 Then you can import it and (assuming you're running from a context on Abbott), access the database.
 
 ```python
+from pathlib import Path
 from iei_data_api.catalog import DataCatalog
 
 catalog = DataCatalog(Path("path/to/.env.dwh"))
