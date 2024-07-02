@@ -13,7 +13,7 @@ setup(
     packages=["iei_data_api"],
     install_requires=[
         "pandas",
-        "psycopg2",
+        "psycopg2-binary",
         "sqlalchemy>=2.0",
     ],
 )
