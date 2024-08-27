@@ -12,9 +12,10 @@ setup(
     long_description_content_type="text/markdown",
     packages=["iei_data_api"],
     install_requires=[
-        "pandas",
         "psycopg2-binary",
         "sqlalchemy>=2.0",
+        "geopandas>=1.0",
+        "GeoAlchemy2",
     ],
 )
 
