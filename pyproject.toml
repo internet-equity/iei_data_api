@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iei_data_api"
+version = "0.1.0"
+description = "A pythonic interface to IEI's data warehouse."
+authors = [
+    {name = "Matt Triano", email = "matt.triano@example.com"},
+]
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "psycopg2-binary",
+    "sqlalchemy>=2.0",
+    "geopandas>=1.0",
+    "GeoAlchemy2",
+]
+
+
+[tool.setuptools]
+packages = ["iei_data_api"]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest>=6.0",
+    "ruff",
+]
+
+[tool.ruff]
+line-length = 100
+exclude = [
+    ".git",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "*.egg-info",
+    "build",
+    "dist",
+    "htmlcov",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = []
+
+[tool.pytest.ini_options]
+addopts = "-vv -s"
+testpaths = ["tests"]
+python_files = "test_*.py"
