@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from typing import Optional, Union
 
-from geoalchemy2 import Geometry, Geography
 import geopandas as gpd
 import pandas as pd
 from sqlalchemy import create_engine, inspect, text
