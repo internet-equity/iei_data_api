@@ -1,7 +1,9 @@
+from functools import cached_property
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
+import geopandas as gpd
 import pandas as pd
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine.base import Engine
@@ -73,18 +75,55 @@ class DataCatalog:
         insp = self._get_inspector()
         return insp.get_table_names(schema=schema)
 
+    def get_view_names(self, schema: str) -> list[str]:
+        insp = self._get_inspector()
+        return insp.get_view_names(schema=schema)
+
+    @cached_property
+    def geo_dtypes(self):
+        with self.engine.connect() as conn:
+            result = conn.execute(
+                text(
+                    """
+                SELECT oid, typname
+                FROM pg_type
+                WHERE typname IN ('geometry', 'geography')
+            """
+                )
+            )
+            return {row[0]: row[1] for row in result}
+
+    def geospatial_columns_in_query(self, sql):
+        with self.engine.connect() as conn:
+            result = conn.execute(text(sql))
+            geospatial_columns = {
+                c.name: self.geo_dtypes[c.type_code]
+                for c in result.cursor.description
+                if c.type_code in self.geo_dtypes.keys()
+            }
+        return geospatial_columns
+
     def command(self, sql: str) -> None:
         try:
             with self.engine.connect() as conn:
                 with conn.begin():
                     conn.execute(text(sql))
         except Exception as e:
-            raise Exception(f"Ran into an error when running sql command:\n{sql}")
+            raise Exception(f"Ran into an error when running sql command:\n{sql}\n" f"Error: {e}")
 
-    def query(self, sql: str) -> pd.DataFrame:
+    def query(self, sql: str) -> Union[gpd.GeoDataFrame, pd.DataFrame]:
+        geospatial_columns = self.geospatial_columns_in_query(sql)
         with self.engine.connect() as conn:
-            result = conn.execute(text(sql))
-            results_df = pd.DataFrame(result.fetchall(), columns=result.keys())
+            if geospatial_columns:
+                df = gpd.read_postgis(
+                    sql=text(sql), con=conn, geom_col=next(iter(geospatial_columns.keys()), None)
+                )
+                for col, dtype in geospatial_columns.items():
+                    if col != df.geometry.name:
+                        df[col] = gpd.GeoSeries.from_wkb(df[col], crs=df.crs)
+            else:
+                result = conn.execute(text(sql))
+                df = pd.DataFrame(result.fetchall(), columns=result.keys())
             if self.engine._is_future:
                 conn.commit()
-        return results_df
+            return df
