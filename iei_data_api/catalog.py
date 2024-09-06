@@ -11,12 +11,15 @@ from sqlalchemy.engine.url import URL
 
 
 class DataCatalog:
-    def __init__(self, env_file_path: Optional[Path] = None, host: str = "localhost") -> None:
+    def __init__(
+        self, env_file_path: Optional[Path] = None, host: str = "localhost", port: str = "25432"
+    ) -> None:
         self.env_file_path = env_file_path
         self.host = host
+        self.port = port
         self.set_engine(host=self.host)
 
-    def set_engine(self, host: str, port: str = "25432") -> Engine:
+    def set_engine(self, host: str) -> Engine:
         password = user = db_name = None
         if self.env_file_path:
             dwh_creds = self._read_env_to_dict(self.env_file_path)
@@ -29,8 +32,8 @@ class DataCatalog:
             user = os.environ.get("POSTGRES_USER")
         if not db_name:
             db_name = os.environ.get("POSTGRES_DB")
-        if all([k is not None for k in [password, user, db_name, host, port]]):
-            self.engine = self._get_pg_engine(user, password, host, port, db_name)
+        if all([k is not None for k in [password, user, db_name, host, self.port]]):
+            self.engine = self._get_pg_engine(user, password, host, self.port, db_name)
         else:
             raise KeyError("At least one of the necessary db cred parts was missing")
 
@@ -42,7 +45,7 @@ class DataCatalog:
                 if not line or line.startswith("#"):
                     continue
                 key, value = line.split("=", 1)
-                env_dict[key] = value.strip('"')
+                env_dict[key] = value.strip('"').strip("'")
         return env_dict
 
     def _get_pg_engine(
